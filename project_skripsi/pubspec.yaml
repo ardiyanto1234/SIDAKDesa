@@ -67,8 +67,10 @@ flutter:
   - assets/images/logo.png
   - assets/images/ilustrasi.png
   - assets/images/banner.png
-  - assets/images/icon_izin.png
+  - assets/images/izin.png
   - assets/images/icon_masuk.png
+  - assets/images/icon_riwayat.png
+  - assets/images/icon_izin.png
  
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

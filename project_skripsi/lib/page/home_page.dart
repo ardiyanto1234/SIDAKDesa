@@ -19,10 +19,11 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> getUserName() async {
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc('wukMPM02lv7PAxRTnS6Q')
-          .get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc('wukMPM02lv7PAxRTnS6Q')
+              .get();
 
       if (doc.exists) {
         setState(() {
@@ -44,7 +45,6 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
         child: Column(
@@ -53,15 +53,25 @@ class _HomePageState extends State<HomePage> {
             // Header
             Row(
               children: [
-                const Icon(Icons.account_circle, size: 50, color: Colors.teal),
+                const CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Colors.teal,
+                  child: Icon(Icons.person, color: Colors.white, size: 30),
+                ),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Selamat Datang 👋", style: TextStyle(fontSize: 14)),
+                    const Text(
+                      "Selamat Datang 👋",
+                      style: TextStyle(fontSize: 14),
+                    ),
                     Text(
                       userName,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -71,63 +81,192 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 24),
 
-            // Card "Bagaimana Hari Ini?"
+            // Card "Sudah absen hari ini?"
             const HariIniCard(),
-            const SizedBox(height: 16),
-
-            // Tombol Izin
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Aksi tombol
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFD8732),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  elevation: 4,
-                ),
-                child: const Text(
-                  'Izin',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ),
             const SizedBox(height: 24),
 
+            // Tombol Izin dan Riwayat
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      // Aksi izin
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.teal, width: 1.5),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            'assets/images/icon_izin.png',
+                            height: 60,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Izin',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      // Aksi riwayat
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      margin: const EdgeInsets.only(left: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.teal, width: 1.5),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            'assets/images/icon_riwayat.png',
+                            height: 60,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Riwayat',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Info Hari Ini
             const Text(
-              'Riwayat Hari Ini',
+              'Info hari ini',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
 
-            // List Riwayat
-            Column(
-              children: const [
-                RiwayatItem(
-                  imageAsset: 'assets/images/icon_masuk.png',
-                  status: 'Hadir',
-                  time: '08:00 - 12.00',
-                ),
-                RiwayatItem(
-                  imageAsset: 'assets/images/icon_masuk.png',
-                  status: 'Hadir',
-                  time: '08:00 - 12.00',
-                ),
-                RiwayatItem(
-                  imageAsset: 'assets/images/icon_izin.png',
-                  status: 'Izin',
-                  time: '00:00',
-                ),
-                RiwayatItem(
-                  imageAsset: 'assets/images/icon_masuk.png',
-                  status: 'Hadir',
-                  time: '08:00 - 12.00',
-                ),
-              ],
+            // Container keseluruhan
+            Container(
+              child: Column(
+                children: [
+                  // Datang
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/images/icon_masuk.png',
+                          width: 32,
+                          height: 32,
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Datang',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              '08:00 wib',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF007F76),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Garis pembatas
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: Divider(
+                      thickness: 1,
+                      height: 1,
+                      color: Colors.black,
+                    ),
+                  ),
+
+                  // Pulang
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/images/icon_masuk.png',
+                          width: 32,
+                          height: 32,
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Pulang',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              '12:00 wib',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF007F76),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -136,9 +275,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// =========================
-// WIDGET: Card Hari Ini
-// =========================
+// Widget: HariIniCard
 class HariIniCard extends StatelessWidget {
   const HariIniCard({super.key});
 
@@ -165,9 +302,9 @@ class HariIniCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  'Bagaimana hari ini?',
+                  'Sudah absen hari ini?',
                   style: TextStyle(
-                    fontSize: 22,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
                   ),
@@ -175,17 +312,12 @@ class HariIniCard extends StatelessWidget {
                 SizedBox(height: 12),
                 Text(
                   'Ayo laporkan kegiatanmu hari ini!',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF007F76),
-                  ),
+                  style: TextStyle(fontSize: 16, color: Color(0xFF007F76)),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 16),
-
-          // Gambar ilustrasi
           Image.asset(
             'assets/images/banner.png',
             height: 100,
@@ -198,9 +330,7 @@ class HariIniCard extends StatelessWidget {
   }
 }
 
-// =========================
-// WIDGET: Riwayat Item
-// =========================
+// Widget: RiwayatItem
 class RiwayatItem extends StatelessWidget {
   final String imageAsset;
   final String status;
@@ -216,11 +346,7 @@ class RiwayatItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Image.asset(
-        imageAsset,
-        width: 32,
-        height: 32,
-      ),
+      leading: Image.asset(imageAsset, width: 32, height: 32),
       title: Text(status),
       subtitle: Text(time),
       contentPadding: const EdgeInsets.symmetric(horizontal: 0),
