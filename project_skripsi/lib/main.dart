@@ -20,19 +20,24 @@ class MyApp extends StatelessWidget {
       title: 'Sistem Informasi Desa',
       debugShowCheckedModeBanner: false,
 
-      // ⛳️ WAJIB: Localizations untuk DatePicker
+      // 🌍 Localizations untuk DatePicker
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-
       supportedLocales: const [
-        Locale('id', 'ID'), // Bahasa Indonesia
-        Locale('en', 'US'), // (opsional, fallback)
+        Locale('id', 'ID'),
+        Locale('en', 'US'),
       ],
+      locale: const Locale('id', 'ID'),
 
-      locale: const Locale('id', 'ID'), // Default pakai Indonesia
+      // 🎨 Tambahkan Theme dengan font Kantumruy
+      theme: ThemeData(
+        fontFamily: 'Kantumruy',
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF006d6d)),
+        useMaterial3: true,
+      ),
 
       initialRoute: '/',
       routes: {
