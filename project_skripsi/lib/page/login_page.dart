@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Tambahkan ini
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -24,12 +25,19 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final querySnapshot = await FirebaseFirestore.instance
-          .collection('users') // disamakan dengan Firebase
+          .collection('users')
           .where('username', isEqualTo: username)
           .where('password', isEqualTo: password)
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
+        final userDoc = querySnapshot.docs.first;
+        final userId = userDoc.id;
+
+        // Simpan ID user ke SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('userId', userId);
+
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
         _showSnackbar('Nama atau kata sandi salah!');

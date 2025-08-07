@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class IzinPage extends StatefulWidget {
   const IzinPage({super.key});
@@ -12,18 +14,75 @@ class IzinPage extends StatefulWidget {
 class _IzinPageState extends State<IzinPage> {
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _tanggalController = TextEditingController();
-  String? _keterangan;
   File? _imageFile;
-
-  final List<String> _keteranganList = ['Izin', 'Sakit'];
+  String? _keterangan;
+  final List<String> _keteranganList = ['Izin', 'Sakit', 'Cuti'];
+  bool _isLoading = false;
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<String> _uploadImageToStorage(File imageFile) async {
+    try {
+      final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      final storageRef = FirebaseStorage.instance.ref().child('izin_bukti/$fileName');
+      final uploadTask = await storageRef.putFile(imageFile);
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      throw Exception('Gagal upload gambar: $e');
+    }
+  }
+
+  Future<void> _handleSubmit() async {
+    final nama = _namaController.text.trim();
+    final tanggal = _tanggalController.text.trim();
+
+    if (nama.isEmpty || tanggal.isEmpty || _keterangan == null || _imageFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap isi semua data dan pilih gambar')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final imageUrl = await _uploadImageToStorage(_imageFile!);
+
+      await FirebaseFirestore.instance.collection('izin').add({
+        'nama': nama, 
+        'tanggal': tanggal,
+        'keterangan': _keterangan,
+        'bukti': imageUrl,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data berhasil dikirim')),
+      );
+
+      _namaController.clear();
+      _tanggalController.clear();
+      setState(() {
+        _keterangan = null;
+        _imageFile = null;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengirim data: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
       });
     }
   }
@@ -60,50 +119,28 @@ class _IzinPageState extends State<IzinPage> {
             const SizedBox(height: 12),
             const Text("Keterangan :", style: TextStyle(fontSize: 16)),
             const SizedBox(height: 6),
-            Container(
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: DropdownButtonFormField<String>(
-                value: _keterangan,
-                items:
-                    _keteranganList
-                        .map(
-                          (item) =>
-                              DropdownMenuItem(value: item, child: Text(item)),
-                        )
-                        .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _keterangan = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+            DropdownButtonFormField<String>(
+              value: _keterangan,
+              items: _keteranganList
+                  .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+                  .toList(),
+              onChanged: (value) => setState(() => _keterangan = value),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
               ),
             ),
-              const SizedBox(height: 16),
+            const SizedBox(height: 16),
             const Text("Bukti:", style: TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: _pickImage,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 120,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 120, vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.orange,
                   borderRadius: BorderRadius.circular(8),
@@ -118,11 +155,7 @@ class _IzinPageState extends State<IzinPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset(
-                      'assets/images/icon_upload.png',
-                      width: 24,
-                      height: 24,
-                    ),
+                    Image.asset('assets/images/icon_upload.png', width: 24, height: 24),
                     const SizedBox(width: 8),
                     const Text(
                       'Upload gambar',
@@ -137,44 +170,37 @@ class _IzinPageState extends State<IzinPage> {
             ),
             const SizedBox(height: 32),
             Center(
-              child:
-                  _imageFile != null
-                      ? ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.file(_imageFile!, height: 150),
-                      )
-                      : Image.asset(
-                        'assets/images/icon_imageplus.png',
-                        height: 150,
-                      ),
+              child: _imageFile != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(_imageFile!, height: 150),
+                    )
+                  : Image.asset('assets/images/icon_imageplus.png', height: 150),
             ),
             const SizedBox(height: 60),
             Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Tambahkan aksi Kirim
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 50,
-                    vertical: 14,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10), // Ubah radius
-                  ),
-                  elevation: 6,
-                  shadowColor: Colors.orangeAccent,
-                ),
-                child: const Text(
-                  'Kirim',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _handleSubmit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 6,
+                        shadowColor: Colors.orangeAccent,
+                      ),
+                      child: const Text(
+                        'Kirim',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
             ),
           ],
         ),

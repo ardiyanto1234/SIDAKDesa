@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'fiturizin_page.dart';
 import 'riwayat_page.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Tambahkan ini
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,28 +21,38 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> getUserName() async {
-    try {
-      final doc =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc('wukMPM02lv7PAxRTnS6Q')
-              .get();
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
 
-      if (doc.exists) {
-        setState(() {
-          userName = doc.data()?['username'] ?? 'Tidak ada nama';
-        });
-      } else {
-        setState(() {
-          userName = 'Pengguna tidak ditemukan';
-        });
-      }
-    } catch (e) {
+    if (userId == null) {
       setState(() {
-        userName = 'Error: $e';
+        userName = 'Tidak login';
+      });
+      return;
+    }
+
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .get();
+
+    if (doc.exists) {
+      setState(() {
+        userName = doc.data()?['username'] ?? 'Tidak ada nama';
+      });
+    } else {
+      setState(() {
+        userName = 'Pengguna tidak ditemukan';
       });
     }
+  } catch (e) {
+    setState(() {
+      userName = 'Terjadi error: $e';
+    });
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +63,6 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Row(
               children: [
                 const CircleAvatar(
@@ -82,12 +92,8 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             const SizedBox(height: 24),
-
-            // Card "Sudah absen hari ini?"
             const HariIniCard(),
             const SizedBox(height: 24),
-
-            // Tombol Izin dan Riwayat
             Row(
               children: [
                 Expanded(
@@ -100,38 +106,9 @@ class _HomePageState extends State<HomePage> {
                         ),
                       );
                     },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Colors.teal, width: 1.5),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Image.asset(
-                            'assets/images/icon_izin.png',
-                            height: 60,
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Izin',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
+                    child: _buildFeatureCard(
+                      'Izin',
+                      'assets/images/icon_izin.png',
                     ),
                   ),
                 ),
@@ -143,145 +120,107 @@ class _HomePageState extends State<HomePage> {
                         MaterialPageRoute(
                           builder: (context) => const RiwayatPage(),
                         ),
-                      );// Aksi riwayat
+                      );
                     },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      margin: const EdgeInsets.only(left: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Colors.teal, width: 1.5),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Image.asset(
-                            'assets/images/icon_riwayat.png',
-                            height: 60,
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Riwayat',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
+                    child: _buildFeatureCard(
+                      'Riwayat',
+                      'assets/images/icon_riwayat.png',
                     ),
                   ),
                 ),
               ],
             ),
-
             const SizedBox(height: 24),
-
-            // Info Hari Ini
             const Text(
               'Info hari ini',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-
-            // Container keseluruhan
-            Container(
-              child: Column(
-                children: [
-                  // Datang
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        Image.asset(
-                          'assets/images/icon_masuk.png',
-                          width: 32,
-                          height: 32,
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'Datang',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              '08:00 wib',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF007F76),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Garis pembatas
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4),
-                    child: Divider(
-                      thickness: 1,
-                      height: 1,
-                      color: Colors.black,
-                    ),
-                  ),
-
-                  // Pulang
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        Image.asset(
-                          'assets/images/icon_masuk.png',
-                          width: 32,
-                          height: 32,
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'Pulang',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              '12:00 wib',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF007F76),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _buildInfoHariIni(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureCard(String label, String imagePath) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.teal, width: 1.5),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(imagePath, height: 60),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoHariIni() {
+    return Container(
+      child: Column(
+        children: [
+          _buildInfoRow('Datang', '08:00 wib'),
+          const Divider(thickness: 1, height: 24),
+          _buildInfoRow('Pulang', '12:00 wib'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String time) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Image.asset(
+            'assets/images/icon_masuk.png',
+            width: 32,
+            height: 32,
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                time,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF007F76),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -308,7 +247,6 @@ class HariIniCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Kiri: teks
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,30 +276,6 @@ class HariIniCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-// Widget: RiwayatItem
-class RiwayatItem extends StatelessWidget {
-  final String imageAsset;
-  final String status;
-  final String time;
-
-  const RiwayatItem({
-    super.key,
-    required this.imageAsset,
-    required this.status,
-    required this.time,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Image.asset(imageAsset, width: 32, height: 32),
-      title: Text(status),
-      subtitle: Text(time),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 0),
     );
   }
 }
